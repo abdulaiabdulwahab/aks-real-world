@@ -1,0 +1,100 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: web
+  namespace: production
+
+spec:
+  # Start with three application instances
+  replicas: 3
+
+  strategy:
+    type: RollingUpdate
+
+    rollingUpdate:
+      # At most one extra pod during deployment
+      maxSurge: 1
+
+      # Keep all required pods available where possible
+      maxUnavailable: 0
+
+  selector:
+    matchLabels:
+      app: web
+
+  template:
+    metadata:
+      labels:
+        app: web
+
+    spec:
+
+      containers:
+
+        - name: web
+          image: nginx:1.28-alpine
+
+          ports:
+            - containerPort: 80
+
+          # Kubernetes scheduler uses requests when
+          # deciding where to place the pod.
+          resources:
+
+            requests:
+              cpu: "25m"
+              memory: "32Mi"
+
+            limits:
+              cpu: "200m"
+              memory: "128Mi"
+
+          # Checks whether the application is alive.
+          # If repeatedly unhealthy, Kubernetes restarts it.
+          livenessProbe:
+
+            httpGet:
+              path: /
+              port: 80
+
+            initialDelaySeconds: 5
+            periodSeconds: 10
+
+          # Checks whether the application is ready
+          # to receive traffic.
+          readinessProbe:
+
+            httpGet:
+              path: /
+              port: 80
+
+            initialDelaySeconds: 3
+            periodSeconds: 5
+
+          volumeMounts:
+
+            # Mount our ConfigMap HTML file
+            - name: web-content
+              mountPath: /usr/share/nginx/html/index.html
+              subPath: index.html
+
+      volumes:
+
+        - name: web-content
+
+          configMap:
+            name: web-config
+
+      # Encourage replicas to spread between nodes.
+      topologySpreadConstraints:
+
+        - maxSkew: 1
+
+          topologyKey: kubernetes.io/hostname
+
+          whenUnsatisfiable: ScheduleAnyway
+
+          labelSelector:
+            matchLabels:
+              app: web

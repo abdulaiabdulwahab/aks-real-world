@@ -1,0 +1,16 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+
+metadata:
+  name: web-pdb
+  namespace: production
+
+spec:
+
+  # During voluntary disruptions,
+  # try to keep at least two pods available.
+  minAvailable: 2
+
+  selector:
+    matchLabels:
+      app: web

@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+
+metadata:
+  name: web-config
+  namespace: production
+
+data:
+  # File that will be mounted inside nginx
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>AKS Production Project</title>
+      </head>
+
+      <body>
+        <h1>AKS Production Application</h1>
+        <p>Running on Azure Kubernetes Service.</p>
+      </body>
+    </html>
